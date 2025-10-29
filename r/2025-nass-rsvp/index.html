@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Redirecting to RSVP…</title>
+  <meta name="robots" content="noindex" />
+  <style>
+    html,body{height:100%;margin:0;background:#0b0f12;color:#e6f5f4;font:16px/1.5 system-ui,Segoe UI,Roboto,Arial}
+    .wrap{min-height:100%;display:grid;place-items:center;padding:32px}
+    .card{max-width:720px;background:#0f171a;border:1px solid #13343a;border-radius:14px;padding:28px}
+    .btn{display:inline-block;margin-top:14px;padding:12px 18px;border-radius:10px;
+         text-decoration:none;background:#36e2d9;color:#071012;font-weight:700}
+    .fine{opacity:.7;font-size:13px;margin-top:10px}
+    code{background:#0b1417;padding:2px 6px;border-radius:6px}
+  </style>
+
+  <!-- GA4 (optional – replace with your ID) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config','G-XXXXXXX');
+  </script>
+
+  <!-- Plausible (optional – replace with your domain if used) -->
+  <script defer data-domain="ctlamedicamarketing.github.io" src="https://plausible.io/js/script.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1 style="margin:0 0 6px">Opening your email to RSVP…</h1>
+      <p>If nothing happens, click the button below.</p>
+      <a id="fallback" class="btn" href="#">RSVP Now</a>
+      <p class="fine">
+        This link records an anonymous click for analytics and then launches your email client.
+        UTM parameters are appended to the email body for attribution from LinkedIn.
+      </p>
+      <p class="fine">Having trouble? Email <code>marketing@ctlamedica.com</code> with subject “RSVP for CTL Amedica Happy Hour”.</p>
+    </div>
+  </div>
+
+  <script>
+    // --------- Helper: get query params ---------
+    const qp = new URLSearchParams(location.search);
+    const utmBits = ['utm_source','utm_medium','utm_campaign','utm_term','utm_content']
+      .map(k => qp.get(k) ? `${k}=${qp.get(k)}` : null)
+      .filter(Boolean)
+      .join('&');
+
+    // --------- Build the mailto from your original template ---------
+    const to      = "marketing@ctlamedica.com";
+    const subject = "RSVP for CTL Amedica Happy Hour";
+
+    // Original body (decoded from your file), plus a blank form the sender can fill
+    let body = [
+      "Hello CTL Amedica Team,",
+      "",
+      "I would like to RSVP for the Happy Hour event at NASS 2025.",
+      "",
+      "Name: ",
+      "Company: ",
+      "Phone: ",
+      "",
+      "Thank you!"
+    ].join("\r\n");
+
+    // Append attribution line if UTM present
+    if (utmBits) {
+      body += "\r\n\r\n" + "— Attribution —" + "\r\n" + utmBits;
+    }
+
+    const mailtoURL = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    // Wire fallback button
+    const $fallback = document.getElementById('fallback');
+    $fallback.href = mailtoURL;
+
+    // --------- Fire analytics, then redirect ---------
+    function go() { location.href = mailtoURL; }
+
+    // Plausible event (fires if script present)
+    try { window.plausible && window.plausible('rsvp_click'); } catch(e){}
+
+    // GA4 event
+    try { window.gtag && window.gtag('event','rsvp_click', { method:'mailto', source: qp.get('utm_source') || 'direct' }); } catch(e){}
+
+    // Give analytics a moment (~250ms), then launch mail app
+    setTimeout(go, 250);
+  </script>
+</body>
+</html>
